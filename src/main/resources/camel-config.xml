@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cxf="http://camel.apache.org/schema/cxf"
+	xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+	xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd
+       http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+	<!-- We still need it for loading the CXFServlet -->
+	<import resource="classpath:META-INF/cxf/cxf.xml" />
+	<import resource="classpath:META-INF/cxf/cxf-servlet.xml" />
+
+	<!-- http://localhost:8080/cxf-spring-camel/webservices/example/test -->
+	<jaxrs:server id="jaxRsServer" address="/"
+		serviceClass="com.cxf.services.ExampleService" />
+		
+	<!-- Tell CXF/JAX-RS where the REST service is defined -->
+	<jaxrs:server id="personRsServer" address="/personServices"
+		serviceClass="com.cxf.services.impl.PersonServiceImpl" />
+		
+	<bean id="personService" class="com.cxf.services.impl.PersonServiceImpl"/> 
+	<bean id="camelRoutes" class="com.cxf.routes.PersonServiceRoute" />
+
+	<camelContext trace="true" id="camelContext" xmlns="http://camel.apache.org/schema/spring">
+		<routeBuilder ref="camelRoutes" />
+		<route id="exampleCXFRS-Route">
+			<from uri="cxfrs:bean:jaxRsServer" />
+			<log message="Hello From Camel" />
+			<setBody>
+				<simple>['SUCCESS']</simple>
+			</setBody>
+			<to uri="log:AFTER?showAll=true" />
+		</route>	
+	</camelContext>
+
+</beans>
